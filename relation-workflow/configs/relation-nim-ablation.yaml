@@ -1,0 +1,43 @@
+# 근거 절제(XAI) 전용 실행 설정. evidence_kind=live_quality.
+#
+# 본 판정과 분리한 이유는 셋이다.
+#   1. 케이스 1건당 API를 2회 더 쓰므로 상한이 다르다
+#   2. 산출물이 섞이면 "본 판정 결과"와 "절제 재질의 결과"를 구분할 수 없다
+#   3. 절제 재질의는 다시 프롬프트를 고치는 근거가 아니다 — 측정일 뿐이다
+#
+# 프롬프트·모델·상한은 본 판정과 같아야 한다. 다르면 판정 차이가 절제 때문인지
+# 설정 때문인지 가릴 수 없다.
+artifact_schema_version: 2
+
+paths:
+  case_authoring: data/cases/relation-cases.yaml
+  cases: local-data/cases.jsonl
+  prompt: prompts/relation-verdict.md
+  note_corpus: local-data/note-corpus.json
+  candidates: local-data/candidates.json
+  recorded_responses: data/recorded/relation-ablation-responses.jsonl
+  output: reports/relation-nim-ablation
+
+notes:
+  max_notes_per_case: 10
+  max_note_chars: 2000
+
+provider:
+  kind: litellm
+  model: nvidia_nim/openai/gpt-oss-20b
+  api_base: https://integrate.api.nvidia.com/v1
+  api_key_env: NVIDIA_NIM_API_KEY
+  structured_output: prompt_only
+  input_cost_per_token_usd: 0.0
+  output_cost_per_token_usd: 0.0
+
+limits:
+  # 근거를 인용한 건 × 2회. development+validation 38건 기준 76회 + 여유.
+  max_requests: 100
+  requests_per_minute: 20
+  max_retries: 3
+  retry_initial_seconds: 5
+  max_cost_usd: 0.25
+  max_input_tokens: 4000
+  max_output_tokens: 1500
+  max_wall_seconds: 120

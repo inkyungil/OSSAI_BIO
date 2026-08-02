@@ -1,0 +1,14 @@
+# 루트 pyproject.toml의 [tool.ruff] 설정과 동일하게 맞춘다.
+# 다른 점은 first-party 인식뿐이다. 이 프로젝트는 루트 pyproject에 등록하지 않고
+# scripts/_bootstrap.py로 src를 경로에 올리므로 ruff에 직접 알려줘야 한다.
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[lint.isort]
+# _bootstrap이 sys.path에 src를 올린 뒤에야 패키지를 import할 수 있다. 두 이름을 같은
+# 구역에 두면 알파벳순으로 `_bootstrap`이 앞에 와서 실행 순서가 저절로 지켜진다.
+# (local-folder 구역은 first-party 뒤라 순서가 뒤집힌다.)
+known-first-party = ["_bootstrap", "bio_relation_workflow"]

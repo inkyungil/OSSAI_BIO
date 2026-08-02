@@ -1,0 +1,45 @@
+# 실제 NVIDIA NIM 호출용. evidence_kind=live_quality.
+#
+# 관계 판정은 텍스트만 쓰므로 원본 Week 1의 멀티모달 모델(nemotron omni)을 쓸 이유가 없다.
+#
+# 모델 선정 근거 — scripts/preflight_nim.py --probe로 같은 케이스를 재본 결과
+#   meta/llama-3.3-70b-instruct              82.2s · fence 있음 · 103건 141분
+#   meta/llama-3.1-8b-instruct                파싱 실패 — JSON 뒤에 설명을 덧붙임
+#   openai/gpt-oss-20b                        4.8s · fence 없음 · 103건 8분   <- 선택
+#   nvidia/llama-3.3-nemotron-super-49b-v1.5 17.5s · output 498로 상한 근접
+# gpt-oss-20b는 code fence 없이 JSON만 반환해 출력 계약을 그대로 지킨다.
+artifact_schema_version: 2
+
+paths:
+  case_authoring: data/cases/relation-cases.yaml
+  cases: local-data/cases.jsonl
+  prompt: prompts/relation-verdict.md
+  note_corpus: local-data/note-corpus.json
+  candidates: local-data/candidates.json
+  recorded_responses: data/recorded/relation-responses.jsonl
+  output: reports/relation-nim
+
+notes:
+  max_notes_per_case: 10
+  max_note_chars: 2000
+
+provider:
+  kind: litellm
+  model: nvidia_nim/openai/gpt-oss-20b
+  api_base: https://integrate.api.nvidia.com/v1
+  api_key_env: NVIDIA_NIM_API_KEY
+  # json_schema 지원 여부는 preflight에서 확인한다. 미지원이면 prompt_only로 둔다.
+  structured_output: prompt_only
+  input_cost_per_token_usd: 0.0
+  output_cost_per_token_usd: 0.0
+
+limits:
+  # 케이스 103건 + 여유. 절제(XAI)는 건당 2회를 더 쓰므로 별도 config로 돌린다.
+  max_requests: 110
+  requests_per_minute: 20
+  max_retries: 3
+  retry_initial_seconds: 5
+  max_cost_usd: 0.25
+  max_input_tokens: 4000
+  max_output_tokens: 1500
+  max_wall_seconds: 120

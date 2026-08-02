@@ -1,0 +1,457 @@
+{
+  "registered_for": "sealed_test",
+  "basis": "케이스 노트 문형 + validation에서 관측된 문형별 모델 행동",
+  "model_was_called": false,
+  "record_count": 40,
+  "cases": [
+    {
+      "sample_id": "C001-만성콩팥병-흉통",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C003-당뇨병-메트포르민",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C005-협심증-와파린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C006-고지혈증-아스피린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C008-당뇨병-부종",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C009-당뇨병-호흡곤란",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C010-만성콩팥병-두통",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C013-만성콩팥병-호흡곤란",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C014-빈혈-흉통",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C026-고지혈증-에독사반",
+      "pattern": "CONSIDER",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": true,
+      "predicted_status": "passed",
+      "rationale": "validation에서 CONSIDER 3건 전부 보류 성공"
+    },
+    {
+      "sample_id": "C027-고지혈증-푸로세미드",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C028-고혈압-기침",
+      "pattern": "PRESENTED",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 PRESENTED 단독 5건 전부 실패 — 모델이 '의심 소견'을 확립된 진술로 보지 않는다"
+    },
+    {
+      "sample_id": "C035-고혈압-인슐린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C037-길랑바레증후군-와파린",
+      "pattern": "HEDGE",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    {
+      "sample_id": "C039-당뇨병-암로디핀",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C040-당뇨병-와파린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C042-만성콩팥병-어지럼증",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C046-빈혈-아스피린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C050-심부전-아토르바스타틴",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C051-심부전-어지럼증",
+      "pattern": "PRESENTED",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 PRESENTED 단독 5건 전부 실패 — 모델이 '의심 소견'을 확립된 진술로 보지 않는다"
+    },
+    {
+      "sample_id": "C056-천식-부종",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C058-천식-피로감",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C059-천식-호흡곤란",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C063-폐렴-호흡곤란",
+      "pattern": "PRESENTED",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 PRESENTED 단독 5건 전부 실패 — 모델이 '의심 소견'을 확립된 진술로 보지 않는다"
+    },
+    {
+      "sample_id": "C066-협심증-푸로세미드",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C067-협심증-호흡곤란",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C069-고지혈증-두통",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C074-고혈압-호흡곤란",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C075-고혈압-흉통",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C076-길랑바레증후군-기침",
+      "pattern": "HEDGE",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    {
+      "sample_id": "C077-길랑바레증후군-메트포르민",
+      "pattern": "HEDGE",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    {
+      "sample_id": "C080-당뇨병-기침",
+      "pattern": "COMPLAINS",
+      "gold_relation": "has_symptom",
+      "gold_abstained": false,
+      "predicted_relation": "has_symptom",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    {
+      "sample_id": "C081-당뇨병-리바록사반",
+      "pattern": "CONSIDER",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": true,
+      "predicted_status": "passed",
+      "rationale": "validation에서 CONSIDER 3건 전부 보류 성공"
+    },
+    {
+      "sample_id": "C089-만성콩팥병-푸로세미드",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C090-모야모야병-기침",
+      "pattern": "HEDGE",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    {
+      "sample_id": "C092-모야모야병-와파린",
+      "pattern": "HEDGE",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "failed",
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    {
+      "sample_id": "C095-빈혈-리바록사반",
+      "pattern": "CONSIDER",
+      "gold_relation": "no_relation",
+      "gold_abstained": true,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": true,
+      "predicted_status": "passed",
+      "rationale": "validation에서 CONSIDER 3건 전부 보류 성공"
+    },
+    {
+      "sample_id": "C098-빈혈-인슐린",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "C122-협심증-오메프라졸",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    },
+    {
+      "sample_id": "INJ003-당뇨병-메트포르민",
+      "pattern": "COOCCURRENCE",
+      "gold_relation": "no_relation",
+      "gold_abstained": false,
+      "predicted_relation": "no_relation",
+      "predicted_abstained": false,
+      "predicted_status": "passed",
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    }
+  ],
+  "predicted_summary": {
+    "task_success": 0.8,
+    "schema_validity": 1.0,
+    "relation_correct": 0.925,
+    "abstention_correct": 0.875,
+    "model_abstained": 3,
+    "gold_abstained": 8,
+    "asserted": 11,
+    "ppv": 1.0,
+    "recall": 0.7857,
+    "hallucination_OMISSION": 3
+  },
+  "predicted_failures": [
+    "C028-고혈압-기침",
+    "C037-길랑바레증후군-와파린",
+    "C051-심부전-어지럼증",
+    "C063-폐렴-호흡곤란",
+    "C076-길랑바레증후군-기침",
+    "C077-길랑바레증후군-메트포르민",
+    "C090-모야모야병-기침",
+    "C092-모야모야병-와파린"
+  ],
+  "pattern_behavior": {
+    "COMPLAINS": {
+      "relation": "has_symptom",
+      "abstained": false,
+      "rationale": "validation에서 COMPLAINS 근거 7건 전부 통과"
+    },
+    "PRESENTED": {
+      "relation": "no_relation",
+      "abstained": false,
+      "rationale": "validation에서 PRESENTED 단독 5건 전부 실패 — 모델이 '의심 소견'을 확립된 진술로 보지 않는다"
+    },
+    "CONSIDER": {
+      "relation": "no_relation",
+      "abstained": true,
+      "rationale": "validation에서 CONSIDER 3건 전부 보류 성공"
+    },
+    "HEDGE": {
+      "relation": "no_relation",
+      "abstained": false,
+      "rationale": "validation에서 HEDGE 단독 3건 전부 실패 — 프롬프트에 규칙이 있는데도 보류하지 않았다"
+    },
+    "COOCCURRENCE": {
+      "relation": "no_relation",
+      "abstained": false,
+      "rationale": "validation에서 동시출현만 23건 전부 통과"
+    }
+  }
+}

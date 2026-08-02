@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>관계 판정 검토 화면</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+         line-height: 1.6; color: #1a1a2e; background: #f5f7fa; }
+  .container { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  header { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { color: #555; font-size: 0.9rem; }
+  .banner { border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 0.85rem; }
+  .banner-warn { background: #fff3cd; border: 1px solid #ffc107; color: #664d00; }
+  .banner-bad { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tab { padding: 9px 16px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;
+         cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+  .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+             box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .section-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px;
+                   display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; width: 4px; height: 18px; background: #2563eb; border-radius: 2px; }
+  .note { font-size: 0.8rem; color: #667085; margin-top: 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .stat { background: #f0f4f8; border-radius: 8px; padding: 11px 13px; }
+  .stat-label { font-size: 0.75rem; color: #667085; }
+  .stat-value { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eef0f3; }
+  th { background: #f8fafc; font-weight: 600; white-space: nowrap; }
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover { background: #f0f7ff; }
+  tbody tr.selected { background: #e8f0fe; }
+  .table-wrapper { overflow-x: auto; max-height: 460px; overflow-y: auto; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px;
+           font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+  .b-live { background: #dcfce7; color: #166534; }
+  .b-test { background: #e0e7ff; color: #3730a3; }
+  .b-ok { background: #dcfce7; color: #166534; }
+  .b-bad { background: #fee2e2; color: #991b1b; }
+  .b-warn { background: #fef3c7; color: #92400e; }
+  .b-neutral { background: #f3f4f6; color: #374151; }
+  .b-inject { background: #fce7f3; color: #9d174d; }
+  select, input[type=range] { font-size: 0.9rem; }
+  select { padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
+  .controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .control { min-width: 220px; }
+  label { display: block; font-size: 0.82rem; font-weight: 500; color: #444; margin-bottom: 5px; }
+  .evidence { background: #fafbfc; border: 1px solid #eef0f3; border-radius: 8px;
+              padding: 14px; margin-top: 10px; }
+  .quote { border-left: 3px solid #2563eb; padding: 6px 0 6px 11px; margin: 8px 0;
+           font-size: 0.87rem; color: #334155; }
+  .check { font-size: 0.84rem; margin-top: 5px; }
+  .check-ok { color: #166534; }
+  .check-bad { color: #991b1b; }
+  .check-warn { color: #92400e; }
+  .check-none { color: #667085; }
+  .empty { color: #667085; font-size: 0.87rem; padding: 14px 0; }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>관계 판정 검토 화면</h1>
+  <div class="subtitle">질병-약물-증상 관계 탐색 · 검증 가능한 workflow</div>
+  <div class="grid" style="margin-top:14px">
+    <div class="stat"><div class="stat-label">모델</div>
+      <div class="stat-value mono" id="meta-model" style="font-size:.85rem"></div></div>
+    <div class="stat"><div class="stat-label">근거 종류</div>
+      <div class="stat-value" id="meta-evidence"></div></div>
+    <div class="stat"><div class="stat-label">운영점</div>
+      <div class="stat-value" id="meta-op" style="font-size:.9rem"></div></div>
+    <div class="stat"><div class="stat-label">일반화 사다리</div>
+      <div class="stat-value" id="meta-gen" style="font-size:.82rem"></div></div>
+  </div>
+  <div class="banner banner-warn">
+    교육용 합성 데이터다. 임상 성능의 근거가 아니며 어떤 판정도 자동 확정되지 않는다.
+    화면에 뜬 모든 결과는 사람 검토 대상이다.
+  </div>
+  <div class="banner banner-bad" id="selfcheck" style="display:none"></div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="panel active" id="p-summary"></div>
+<div class="panel" id="p-cases"></div>
+<div class="panel" id="p-threshold"></div>
+<div class="panel" id="p-queue"></div>
+<div class="panel" id="p-xai"></div>
+</div>
+
+<script id="payload" type="application/json">__PAYLOAD__</script>
+<script>
+const D = JSON.parse(document.getElementById('payload').textContent);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = v => v === null || v === undefined ? '—' : (v * 100).toFixed(1) + '%';
+
+// --- 라우팅. evaluation/operating_point.py:route_case와 같은 규칙이다.
+// 아래 selfCheck()가 이 함수로 다시 센 값을 파이썬이 계산한 격자와 대조한다.
+function routeCase(c, minCooccur, minConfidence) {
+  if (c.support < minCooccur) return 'filtered';
+  if (!c.has_output || c.abstained) return 'review_queue';
+  if (c.confidence < minConfidence) return 'review_queue';
+  return c.relation !== 'no_relation' ? 'auto_show' : 'auto_drop';
+}
+
+function tally(cases, mc, conf) {
+  const t = {filtered:0, review_queue:0, auto_show:0, auto_drop:0,
+             auto_show_correct:0, silent_miss:0, queue_needed:0};
+  for (const c of cases) {
+    const r = routeCase(c, mc, conf);
+    t[r]++;
+    const needsHuman = c.gold_relation !== 'no_relation' || c.gold_abstained;
+    if (r === 'auto_show' && c.relation === c.gold_relation) t.auto_show_correct++;
+    if ((r === 'auto_drop' || r === 'filtered') && needsHuman) t.silent_miss++;
+    if (r === 'review_queue' && needsHuman) t.queue_needed++;
+  }
+  t.ppv = t.auto_show ? t.auto_show_correct / t.auto_show : null;
+  t.queue_precision = t.review_queue ? t.queue_needed / t.review_queue : null;
+  return t;
+}
+
+// 화면이 파이썬과 다른 숫자를 보이면 그 화면은 증거가 아니다. 불일치를 숨기지 않는다.
+function selfCheck() {
+  const bad = [];
+  for (const cell of D.grid) {
+    const cases = D.cases.filter(c => c.split === cell.split);
+    const t = tally(cases, cell.min_cooccur, cell.min_confidence);
+    if (t.auto_show !== cell.auto_show || t.review_queue !== cell.review_queue
+        || t.silent_miss !== cell.silent_miss) {
+      bad.push(`${cell.split} mc=${cell.min_cooccur} conf=${cell.min_confidence}`);
+    }
+  }
+  if (bad.length) {
+    $('selfcheck').style.display = 'block';
+    $('selfcheck').textContent =
+      '자체 검사 실패 — 화면 계산이 파이썬 결과와 다르다: ' + bad.join(', ');
+  }
+}
+
+// --- 요약 ---
+function renderSummary() {
+  const rows = D.splits.map(s => `<tr>
+    <td><b>${esc(s.split)}</b></td><td>${s.record_count}</td>
+    <td>${s.task_success.toFixed(3)}</td><td>${s.schema_validity.toFixed(3)}</td>
+    <td>${s.ppv === null ? '—' : s.ppv.toFixed(3)}</td>
+    <td>${s.recall === null ? '—' : s.recall.toFixed(3)}</td>
+    <td>${s.model_abstained} / ${s.gold_abstained}</td>
+    <td><span class="badge ${s.evidence_kind === 'live_quality' ? 'b-live' : 'b-test'}">${esc(s.evidence_kind)}</span></td>
+  </tr>`).join('');
+
+  const routing = D.splits.map(s => {
+    const r = Object.entries(s.routing_counts)
+      .map(([k, v]) => `<span class="badge b-neutral">${esc(k)} ${v}</span>`).join(' ');
+    return `<tr><td><b>${esc(s.split)}</b></td><td>${r}</td></tr>`;
+  }).join('');
+
+  const halluc = D.splits.map(s => {
+    const h = Object.keys(s.hallucinations).length
+      ? Object.entries(s.hallucinations).map(([k, v]) =>
+          `<span class="badge b-bad">${esc(k)} ${v}</span>`).join(' ')
+      : '<span class="badge b-ok">없음</span>';
+    return `<tr><td><b>${esc(s.split)}</b></td><td>${h}</td></tr>`;
+  }).join('');
+
+  $('p-summary').innerHTML = `
+  <div class="section">
+    <div class="section-title">split별 결과</div>
+    <div class="table-wrapper"><table>
+      <thead><tr><th>split</th><th>건수</th><th>task_success</th><th>schema</th>
+        <th>PPV</th><th>recall</th><th>보류 모델/정답</th><th>근거 종류</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="note">PPV는 화면에 뜬 관계 중 맞은 비율이다. 전체 정확도는
+      no_relation이 다수라 높게 나오므로 화면 품질을 말해주지 않는다 (day3 p35-36).</div>
+  </div>
+  <div class="section">
+    <div class="section-title">라우팅 — 자동확정 경로가 없다</div>
+    <div class="table-wrapper"><table><tbody>${routing}</tbody></table></div>
+    <div class="note">APPROVED라는 값 자체가 타입에 없다. 모든 통과 결과는
+      DRAFT_REVIEW로 간다 (day5 p51, day6 p35).</div>
+  </div>
+  <div class="section">
+    <div class="section-title">환각 4분류</div>
+    <div class="table-wrapper"><table><tbody>${halluc}</tbody></table></div>
+    <div class="note">NUMBER · SOURCE · OMISSION · RELATION (day5 p21).</div>
+  </div>`;
+}
+
+// --- 케이스와 근거 ---
+function caseRow(c) {
+  const ok = c.status === 'passed';
+  return `<tr class="clickable" data-id="${esc(c.sample_id)}">
+    <td class="mono">${esc(c.sample_id)}</td>
+    <td>${esc(c.relation === null ? '—' : c.relation)}${c.abstained ? ' <span class="badge b-warn">보류</span>' : ''}</td>
+    <td>${esc(c.gold_relation)}${c.gold_abstained ? ' <span class="badge b-warn">보류</span>' : ''}</td>
+    <td>${c.confidence === null ? '—' : c.confidence.toFixed(2)}</td>
+    <td><span class="badge ${ok ? 'b-ok' : 'b-bad'}">${esc(c.status)}</span></td>
+    <td><span class="badge ${c.routing === 'DRAFT_REVIEW_INJECTION' ? 'b-inject' : 'b-neutral'}">${esc(c.routing)}</span></td>
+  </tr>`;
+}
+
+function renderEvidence(c) {
+  if (!c.evidence.length) {
+    return `<div class="empty">인용한 근거가 없다. ${c.abstained
+      ? '보류에는 근거를 넣지 않는다 (스키마가 강제).'
+      : '관계를 인정하지 않은 판정이다.'}</div>`;
+  }
+  const items = c.evidence.map(e => {
+    const grounded = e.similarity >= 0.8;
+    return `<div class="evidence">
+      <div class="quote">"${esc(e.quote)}"</div>
+      <div class="note">노트 <span class="mono">${esc(e.note_id)}</span></div>
+      <div class="check ${grounded ? 'check-ok' : 'check-bad'}">
+        ${grounded ? '✓' : '✗'} 근거 검증 — 노트 원문 일치도 ${e.similarity.toFixed(3)}
+        ${grounded ? '' : '(기준 0.8 미달 — 인용을 지어냈을 수 있다)'}</div>
+    </div>`;
+  }).join('');
+
+  const ab = c.ablation;
+  let ablation;
+  if (!ab) {
+    ablation = `<div class="check check-none">· 근거 절제 — 측정하지 않았다
+      (절제는 development·validation에서만 돌렸다)</div>`;
+  } else if (ab.faithfulness === 'FAITHFUL') {
+    ablation = `<div class="check check-ok">✓ 근거 제거 시 판정 뒤집힘 → 실제 판단 근거</div>`;
+  } else if (ab.faithfulness === 'REDUNDANT') {
+    ablation = `<div class="check check-warn">△ 근거만으로 같은 판정이 나오지만,
+      빼도 판정이 그대로다 — 같은 결론을 낼 근거가 더 있다</div>`;
+  } else if (ab.faithfulness === 'DECORATIVE') {
+    ablation = `<div class="check check-bad">✗ 근거를 빼도 판정이 그대로다 →
+      인용이 사후에 붙은 장식일 수 있다 (day6 p17)</div>`;
+  } else if (ab.faithfulness === 'NECESSITY_VACUOUS') {
+    ablation = `<div class="check check-none">· 인용문이 노트 전부여서 필요성을 물을 수 없다
+      (빈 입력으로는 어떤 판정도 재현되지 않으므로 측정이 아니다)</div>`;
+  } else {
+    ablation = `<div class="check check-none">· 절제 측정 불가 — ${esc(ab.note || ab.faithfulness)}</div>`;
+  }
+
+  let reference = `<div class="check check-none">· 참조표가 대조하지 않은 후보다</div>`;
+  if (c.in_reference !== null) {
+    const asserted = c.relation !== null && c.relation !== 'no_relation';
+    reference = asserted === c.in_reference
+      ? `<div class="check check-ok">✓ 참조표와 일치</div>`
+      : `<div class="check check-warn">⚠ 참조표와 불일치 — 사람 확인 필요
+         ${c.reference_error ? '(참조표 항목 자체가 오류로 표시돼 있다)' : ''}</div>`;
+  }
+  return items + ablation + reference;
+}
+
+function renderCaseDetail(id) {
+  const c = D.cases.find(x => x.sample_id === id);
+  const inj = c.injection_signals.length
+    ? `<div class="banner banner-warn" style="margin-top:0">
+        주입 신호 ${c.injection_signals.map(s => esc(s)).join(', ')} —
+        ${c.injection_complied.length
+          ? '<b>모델이 지시를 따랐다</b>' : '모델은 지시를 따르지 않았다'}.
+        탐지됐으므로 저항 여부와 무관하게 사람 확인 큐로 간다.</div>`
+    : '';
+  $('case-detail').innerHTML = `
+    <div class="section-title">${esc(c.disease)} → ${esc(c.partner)}
+      <span class="badge b-neutral">${esc(c.partner_label)}</span>
+      <span class="badge b-neutral">support ${c.support}</span></div>
+    ${inj}
+    <div><b>판정</b> ${esc(c.relation === null ? '파싱 실패' : c.relation)}
+      ${c.abstained ? '<span class="badge b-warn">보류</span>' : ''}
+      · 신뢰도 ${c.confidence === null ? '—' : c.confidence.toFixed(2)}
+      · <b>정답</b> ${esc(c.gold_relation)}${c.gold_abstained ? ' (보류)' : ''}</div>
+    ${renderEvidence(c)}
+    <div class="note">노트 원문</div>
+    ${c.notes.map(n => `<div class="quote mono">${esc(n.note_id)} — ${esc(n.text)}</div>`).join('')}`;
+}
+
+function renderCases() {
+  $('p-cases').innerHTML = `
+  <div class="section">
+    <div class="section-title">케이스 목록</div>
+    <div class="controls">
+      <div class="control"><label>split</label>
+        <select id="case-split"><option value="all">전체</option>
+          ${SPLIT_OPTIONS}</select></div>
+      <div class="control"><label>보기</label>
+        <select id="case-filter">
+          <option value="all">전체</option>
+          <option value="failed">실패한 건만</option>
+          <option value="asserted">관계를 인정한 건만</option>
+          <option value="abstained">보류한 건만</option>
+        </select></div>
+    </div>
+    <div class="table-wrapper"><table>
+      <thead><tr><th>케이스</th><th>모델 판정</th><th>정답</th><th>신뢰도</th>
+        <th>결과</th><th>라우팅</th></tr></thead>
+      <tbody id="case-body"></tbody></table></div>
+  </div>
+  <div class="section" id="case-detail"><div class="empty">위에서 케이스를 고른다.</div></div>`;
+
+  const draw = () => {
+    const sp = $('case-split').value, f = $('case-filter').value;
+    const list = D.cases.filter(c =>
+      (sp === 'all' || c.split === sp) &&
+      (f === 'all'
+        || (f === 'failed' && c.status !== 'passed')
+        || (f === 'asserted' && c.relation && c.relation !== 'no_relation')
+        || (f === 'abstained' && c.abstained)));
+    $('case-body').innerHTML = list.length
+      ? list.map(caseRow).join('')
+      : '<tr><td colspan="6" class="empty">해당하는 건이 없다.</td></tr>';
+    $('case-body').querySelectorAll('tr.clickable').forEach(tr =>
+      tr.onclick = () => {
+        $('case-body').querySelectorAll('tr').forEach(x => x.classList.remove('selected'));
+        tr.classList.add('selected');
+        renderCaseDetail(tr.dataset.id);
+      });
+  };
+  $('case-split').onchange = draw;
+  $('case-filter').onchange = draw;
+  draw();
+}
+
+// --- 두 임계값 ---
+function renderThreshold() {
+  $('p-threshold').innerHTML = `
+  <div class="section">
+    <div class="section-title">두 임계값은 같은 문제다</div>
+    <div class="note" style="margin:0 0 14px">
+      관계 잡음컷(min_cooccur)과 분류 운영점(confidence)은 "연속 신뢰도를 어디서 자를까"의
+      같은 문제다 (day3 p40). 그래서 한 화면에서 함께 움직인다.
+      <b>운영점은 validation에서만 고른다</b> — 다른 split에서 보이는 값은 참고이지 선택
+      근거가 아니다 (day5 p37-38).</div>
+    <div class="controls">
+      <div class="control"><label>split</label>
+        <select id="th-split">${SPLIT_OPTIONS}</select></div>
+      <div class="control"><label>min_cooccur — <span id="th-mc-v"></span></label>
+        <input type="range" id="th-mc" min="1" max="3" step="1" value="1" style="width:100%"></div>
+      <div class="control"><label>confidence 임계값 — <span id="th-cf-v"></span></label>
+        <input type="range" id="th-cf" min="0" max="4" step="1" value="2" style="width:100%"></div>
+    </div>
+    <div class="grid" id="th-stats"></div>
+    <div class="note" id="th-note"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">임계값을 움직였을 때</div>
+    <div class="table-wrapper"><table>
+      <thead><tr><th>min_cooccur</th><th>confidence</th><th>자동표시</th><th>PPV</th>
+        <th>무성 놓침</th><th>확인 큐</th><th>큐 정밀도</th></tr></thead>
+      <tbody id="th-body"></tbody></table></div>
+    <div class="note">무성 놓침 — 사람도 못 보고 화면에도 없는 건. 이 정책의 진짜 비용이다.</div>
+  </div>`;
+
+  const confs = D.confidence_values;
+  const draw = () => {
+    const sp = $('th-split').value;
+    const mc = +$('th-mc').value;
+    const conf = confs[+$('th-cf').value];
+    $('th-mc-v').textContent = mc;
+    $('th-cf-v').textContent = conf > 1 ? '1.0 초과 (전부 큐로)' : conf.toFixed(2);
+    const t = tally(D.cases.filter(c => c.split === sp), mc, conf);
+    $('th-stats').innerHTML = `
+      <div class="stat"><div class="stat-label">자동 표시</div><div class="stat-value">${t.auto_show}</div></div>
+      <div class="stat"><div class="stat-label">표시된 것 중 정답 (PPV)</div><div class="stat-value">${pct(t.ppv)}</div></div>
+      <div class="stat"><div class="stat-label">무성 놓침</div><div class="stat-value">${t.silent_miss}</div></div>
+      <div class="stat"><div class="stat-label">사람 확인 큐</div><div class="stat-value">${t.review_queue}</div></div>
+      <div class="stat"><div class="stat-label">큐 정밀도</div><div class="stat-value">${pct(t.queue_precision)}</div></div>
+      <div class="stat"><div class="stat-label">잡음컷에 걸림</div><div class="stat-value">${t.filtered}</div></div>`;
+    $('th-note').innerHTML = sp === 'validation'
+      ? `선택된 운영점은 min_cooccur=${D.operating_point.min_cooccur},
+         confidence≥${D.operating_point.min_confidence}이다.`
+      : `<b>이 split에서는 임계값을 고르지 않는다.</b> 위 숫자는 이해를 돕기 위한 것이다.`;
+    $('th-body').innerHTML = D.grid.filter(c => c.split === sp).map(c => `<tr>
+      <td>${c.min_cooccur}</td><td>${c.min_confidence > 1 ? '1.0 초과' : c.min_confidence}</td>
+      <td>${c.auto_show}</td><td>${c.ppv === null ? '—' : c.ppv.toFixed(3)}</td>
+      <td>${c.silent_miss}</td><td>${c.review_queue}</td>
+      <td>${c.queue_precision === null ? '—' : c.queue_precision.toFixed(3)}</td></tr>`).join('');
+  };
+  $('th-split').onchange = draw;
+  $('th-mc').oninput = draw;
+  $('th-cf').oninput = draw;
+  $('th-split').value = 'validation';
+  draw();
+}
+
+// --- 검토 큐 ---
+function renderQueue() {
+  const groups = [
+    ['DRAFT_REVIEW_INJECTION', '주입 탐지 — 입력 노트에 지시문이 섞였다', 'b-inject'],
+    ['REJECT_SCHEMA', '스키마 실패 — 판정을 읽을 수 없다', 'b-bad'],
+    ['REJECT_GROUNDING', '근거 실패 — 인용을 노트에서 확인할 수 없다', 'b-bad'],
+    ['DRAFT_REVIEW_ABSTAIN', '모델이 보류했다 — 노트만으로 가릴 수 없는 건', 'b-warn'],
+  ];
+  const blocks = groups.map(([key, title, cls]) => {
+    const list = D.cases.filter(c => c.routing === key);
+    const body = list.length ? `<div class="table-wrapper"><table>
+        <thead><tr><th>케이스</th><th>split</th><th>모델</th><th>정답</th><th>사유</th></tr></thead>
+        <tbody>${list.map(c => `<tr>
+          <td class="mono">${esc(c.sample_id)}</td><td>${esc(c.split)}</td>
+          <td>${esc(c.relation === null ? '—' : c.relation)}${c.abstained ? ' (보류)' : ''}</td>
+          <td>${esc(c.gold_relation)}${c.gold_abstained ? ' (보류)' : ''}</td>
+          <td>${esc(c.injection_signals.join(', ') || c.abstention_reason || '—')}</td>
+        </tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty">해당 건 없음.</div>';
+    return `<div class="section"><div class="section-title">
+      <span class="badge ${cls}">${esc(key)}</span> ${esc(title)} · ${list.length}건</div>${body}</div>`;
+  }).join('');
+
+  const passed = D.cases.filter(c => c.routing === 'DRAFT_REVIEW').length;
+  $('p-queue').innerHTML = `
+  <div class="section">
+    <div class="section-title">사람 확인 큐</div>
+    <div class="note" style="margin:0">
+      통과한 ${passed}건도 <b>DRAFT_REVIEW</b>다. 아래 큐는 그중에서도 먼저 봐야 하는
+      이유가 붙은 건이며, 어느 경로로도 자동 확정에 도달하지 않는다 (day5 p51, day6 p35).
+      validator 체인은 형식과 근거의 출처만 지킨다 — <b>판정 내용이 틀린 것은 잡지 못한다.</b>
+    </div>
+  </div>${blocks}`;
+}
+
+// --- XAI 절제 ---
+function renderXai() {
+  if (!D.ablation_summary) {
+    $('p-xai').innerHTML = '<div class="section"><div class="empty">절제 결과가 없다.</div></div>';
+    return;
+  }
+  const s = D.ablation_summary;
+  const order = ['FAITHFUL','REDUNDANT','PARTIAL','DECORATIVE','NECESSITY_VACUOUS','NOT_APPLICABLE'];
+  const table = (obj, first) => `<div class="table-wrapper"><table>
+    <thead><tr><th>${first}</th>${order.map(k => `<th>${k}</th>`).join('')}</tr></thead>
+    <tbody>${[...new Set(Object.keys(obj).map(k => k.split('|')[0]))].map(row =>
+      `<tr><td><b>${esc(row)}</b></td>${order.map(k =>
+        `<td>${obj[row + '|' + k] || 0}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+
+  $('p-xai').innerHTML = `
+  <div class="section">
+    <div class="section-title">근거 절제 — 텍스트 축 XAI</div>
+    <div class="note" style="margin:0 0 12px">
+      <b>충분성</b> 인용된 문장만 주고 재질의 · <b>필요성</b> 인용된 문장을 빼고 재질의.
+      근거를 뺐는데 판정이 그대로면 그 인용은 사후에 붙은 장식이다 (day6 p17).
+      development·validation ${s.record_count}건, 실제로 두 축을 다 잰 것은
+      ${s.measured_both_axes}건이다.</div>
+    <div class="section-title" style="font-size:.95rem">정확도 × 충실도</div>
+    ${table(s.crosstab_accuracy_by_faithfulness, '판정')}
+    <div class="section-title" style="font-size:.95rem;margin-top:18px">판정 극성 × 충실도</div>
+    ${table(s.crosstab_polarity_by_faithfulness, '극성')}
+    <div class="note">
+      관계 없음 판정은 필요성이 성립하기 어렵다. 텍스트를 지우는 조작은 판정을
+      "관계 없음" 쪽으로만 밀 수 있으므로, 이미 no_relation인 판정에서는 절제가
+      아무것도 가르지 못한다. <b>절제는 관계를 인정한 판정에만 검정력이 있다.</b><br>
+      NECESSITY_VACUOUS ${s.necessity_untestable}건은 인용문이 노트 전부여서 뺄 것이
+      남지 않는 경우다. 자동으로 참이 되므로 충실 판정으로 세지 않는다.</div>
+  </div>`;
+}
+
+// --- 탭 ---
+const TABS = [
+  ['p-summary', '요약', renderSummary],
+  ['p-cases', '케이스·근거', renderCases],
+  ['p-threshold', '두 임계값', renderThreshold],
+  ['p-queue', '검토 큐', renderQueue],
+  ['p-xai', 'XAI 절제', renderXai],
+];
+const SPLIT_OPTIONS = D.splits.map(s =>
+  `<option value="${s.split}">${s.split}</option>`).join('');
+
+$('meta-model').textContent = D.meta.model;
+$('meta-evidence').innerHTML = D.splits.map(s =>
+  `<span class="badge ${s.evidence_kind === 'live_quality' ? 'b-live' : 'b-test'}">${s.evidence_kind}</span>`
+).filter((v, i, a) => a.indexOf(v) === i).join(' ');
+$('meta-op').textContent =
+  `min_cooccur ${D.operating_point.min_cooccur} · conf ≥ ${D.operating_point.min_confidence}`;
+$('meta-gen').textContent = D.meta.generalization;
+
+$('tabs').innerHTML = TABS.map(([id, label], i) =>
+  `<div class="tab${i === 0 ? ' active' : ''}" data-target="${id}">${label}</div>`).join('');
+$('tabs').querySelectorAll('.tab').forEach(tab => tab.onclick = () => {
+  $('tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  tab.classList.add('active');
+  $(tab.dataset.target).classList.add('active');
+});
+TABS.forEach(([, , render]) => render());
+selfCheck();
+</script>
+</body>
+</html>

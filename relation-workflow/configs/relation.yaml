@@ -1,0 +1,31 @@
+# 저장 응답 replay용. API를 호출하지 않는다.
+# 이 경로로 나온 결과는 evidence_kind=test_only이며 모델 품질 근거가 아니다.
+artifact_schema_version: 2
+
+paths:
+  case_authoring: data/cases/relation-cases.yaml
+  cases: local-data/cases.jsonl
+  prompt: prompts/relation-verdict.md
+  note_corpus: local-data/note-corpus.json
+  candidates: local-data/candidates.json
+  recorded_responses: data/recorded/relation-responses.jsonl
+  output: reports/relation
+
+notes:
+  max_notes_per_case: 10
+  max_note_chars: 2000
+
+provider:
+  kind: recorded
+  model: recorded/relation-verdict
+
+limits:
+  max_requests: 110
+  requests_per_minute: 20
+  max_retries: 3
+  retry_initial_seconds: 5
+  max_cost_usd: 0.25
+  # 이미지가 없어 원본 Week 1(250000)보다 훨씬 작다. 노트 5건 + 지침 기준.
+  max_input_tokens: 4000
+  max_output_tokens: 1500
+  max_wall_seconds: 120
