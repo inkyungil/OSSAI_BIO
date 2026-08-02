@@ -206,11 +206,31 @@ def main() -> int:
             "min_confidence": chosen["min_confidence"],
         }
 
+    # 허브 개체는 화면에서 새로 정의하지 않는다. 후보 생성 단계가 이미 노트 전수에서
+    # 골라 `candidates.json`에 박아둔 것을 그대로 읽는다. 화면이 따로 기준을 만들면
+    # 층화에 쓴 정의와 화면이 말하는 정의가 갈린다 (day3 p11).
+    diseases = sorted({row["disease"] for row in cases_payload})
+    candidates = json.loads(
+        project_path(PROJECT_ROOT, settings.paths.candidates).read_text(
+            encoding="utf-8"
+        )
+    )
+    hubs = sorted(candidates["hub_entities"])
+    # 걸친 질병 수는 라벨링 100건이 아니라 후보 전수에서 센다.
+    hub_reach: dict[str, set[str]] = {}
+    for candidate in candidates["candidates"]:
+        hub_reach.setdefault(candidate["partner"], set()).add(candidate["disease"])
+    hub_degree = {name: len(seen) for name, seen in hub_reach.items()}
+
     payload = {
         "meta": {
             "model": settings.provider.model,
             "generalization": "SINGLE — 단일 분할·단일 시드, 가설 생성 수준",
         },
+        "diseases": diseases,
+        "hubs": hubs,
+        "hub_degree": hub_degree,
+        "hub_top_ratio": candidates["provenance"].get("hub_top_ratio"),
         "splits": splits_payload,
         "cases": cases_payload,
         "grid": grid_payload,

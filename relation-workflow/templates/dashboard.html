@@ -159,6 +159,40 @@
   .empty { color: var(--ink-soft); font-size: .87rem; padding: 14px 0; }
   .mono { font-family: var(--mono); font-size: .8rem; }
 
+  /* 관계 그래프. 판정은 색과 선 모양 둘로 구분한다 — 색만 쓰면 색을 못 가리는
+     사람에게 정보가 통째로 사라진다. */
+  .explore-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .explore-grid { grid-template-columns: 1fr; } }
+  .graph { width: 100%; height: auto; display: block; }
+  .edge { stroke: var(--ink-soft); }
+  .edge.e-asserted { stroke: var(--accent); }
+  .edge.e-abstain { stroke: var(--warn-fg); }
+  .edge.e-none { stroke: var(--ink-soft); opacity: .45; }
+  .edge.selected { stroke-width: 3.4; }
+  .dot { stroke: var(--surface); stroke-width: 2; }
+  .n-center { fill: var(--accent); }
+  .n-drug { fill: var(--test-fg); }
+  .n-symptom { fill: var(--warn-fg); }
+  .hub-ring { fill: none; stroke: var(--warn-fg); stroke-width: 1.5;
+              stroke-dasharray: 3 3; opacity: .8; }
+  .gnode { cursor: pointer; }
+  .gnode:hover .dot, .gnode.selected .dot { stroke: var(--accent); stroke-width: 3; }
+  .gnode:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .glabel { font-family: var(--sans); font-size: 11px; fill: var(--ink); }
+  .glabel.center { font-weight: 700; font-size: 12.5px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px;
+            font-size: .76rem; color: var(--ink-soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 20px; height: 0; border-top-width: 2px; border-top-style: solid; }
+  .sw.e-asserted { border-color: var(--accent); }
+  .sw.e-abstain { border-color: var(--warn-fg); border-top-style: dashed; }
+  .sw.e-none { border-color: var(--ink-soft); border-top-style: dotted; }
+  .sw-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .sw-dot.n-drug { background: var(--test-fg); }
+  .sw-dot.n-symptom { background: var(--warn-fg); }
+  .sw-ring { width: 12px; height: 12px; border-radius: 50%;
+             border: 1.5px dashed var(--warn-fg); }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   }
@@ -190,7 +224,8 @@
 
 <div class="tabs" id="tabs"></div>
 
-<div class="panel active" id="p-summary"></div>
+<div class="panel active" id="p-explore"></div>
+<div class="panel" id="p-summary"></div>
 <div class="panel" id="p-cases"></div>
 <div class="panel" id="p-threshold"></div>
 <div class="panel" id="p-queue"></div>
@@ -246,6 +281,138 @@ function selfCheck() {
     $('selfcheck').textContent =
       '자체 검사 실패 — 화면 계산이 파이썬 결과와 다르다: ' + bad.join(', ');
   }
+}
+
+// --- 관계 탐색 ---
+// 원 프로토타입의 흐름을 되살린 화면이다: 중심 개체를 고르고, 그 질병에 붙은 후보를
+// 그래프로 보고, 하나를 골라 근거문장을 읽는다. 표만 있으면 어느 개체가 허브인지
+// 보이지 않는다 — 인슐린이 아무 질병하고나 붙는 것은 그래프에서만 눈에 띈다 (day3 p11).
+
+// 판정을 선 모양으로도 구분한다. 색만으로 구분하면 색을 못 가리는 사람에게 사라진다.
+function edgeStyle(c) {
+  if (c.abstained) return { cls: 'e-abstain', dash: '4 3', width: 2 };
+  if (c.relation && c.relation !== 'no_relation') return { cls: 'e-asserted', dash: '', width: 2.6 };
+  return { cls: 'e-none', dash: '2 4', width: 1.2 };
+}
+
+function relationGraph(center, list, selectedId) {
+  if (!list.length) return '<div class="empty">이 중심 개체의 후보가 없다.</div>';
+  const W = 520, H = 360, cx = W / 2, cy = H / 2, R = 128;
+  const nodes = list.map((c, i) => {
+    const angle = (2 * Math.PI * i) / list.length - Math.PI / 2;
+    return { c, x: cx + R * Math.cos(angle), y: cy + R * Math.sin(angle), angle };
+  });
+  const edges = nodes.map(n => {
+    const s = edgeStyle(n.c);
+    return `<line class="edge ${s.cls}${n.c.sample_id === selectedId ? ' selected' : ''}"
+      x1="${cx}" y1="${cy}" x2="${n.x.toFixed(1)}" y2="${n.y.toFixed(1)}"
+      stroke-width="${s.width}" stroke-dasharray="${s.dash}"></line>`;
+  }).join('');
+  const marks = nodes.map(n => {
+    const hub = D.hubs.includes(n.c.partner);
+    // 라벨을 바깥쪽으로 밀어 노드와 겹치지 않게 한다.
+    const lx = cx + (R + 34) * Math.cos(n.angle);
+    const ly = cy + (R + 34) * Math.sin(n.angle);
+    const anchor = Math.abs(lx - cx) < 24 ? 'middle' : (lx > cx ? 'start' : 'end');
+    return `<g class="gnode${n.c.sample_id === selectedId ? ' selected' : ''}"
+        data-id="${esc(n.c.sample_id)}" tabindex="0" role="button"
+        aria-label="${esc(n.c.partner)} 관계 보기">
+      ${hub ? `<circle class="hub-ring" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="13"></circle>` : ''}
+      <circle class="dot ${n.c.partner_label === '약물' ? 'n-drug' : 'n-symptom'}"
+        cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="8"></circle>
+      <text class="glabel" x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}"
+        text-anchor="${anchor}">${esc(n.c.partner)}</text>
+    </g>`;
+  }).join('');
+  return `<svg class="graph" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="${esc(center)}에 붙은 후보 관계 ${list.length}건">
+    ${edges}
+    <circle class="dot n-center" cx="${cx}" cy="${cy}" r="13"></circle>
+    <text class="glabel center" x="${cx}" y="${cy + 32}" text-anchor="middle">${esc(center)}</text>
+    ${marks}
+  </svg>`;
+}
+
+function renderExplore() {
+  $('p-explore').innerHTML = `
+  <div class="section">
+    <div class="section-title">입력 설정</div>
+    <div class="controls" style="margin-bottom:0">
+      <div class="control"><label for="ex-disease">중심 개체 (질병)</label>
+        <select id="ex-disease">${D.diseases.map(d =>
+          `<option value="${esc(d)}">${esc(d)}</option>`).join('')}</select></div>
+      <div class="control"><label for="ex-split">split</label>
+        <select id="ex-split"><option value="all">전체</option>${SPLIT_OPTIONS}</select></div>
+    </div>
+    <div class="note">중심 개체에 붙은 <b>후보</b> 관계를 전부 보여준다. 후보는 노트에
+      함께 등장했다는 뜻일 뿐이며, 관계로 인정됐는지는 선 모양이 말해준다.</div>
+  </div>
+  <div class="explore-grid">
+    <div class="section">
+      <div class="section-title">관계 그래프</div>
+      <div id="ex-graph"></div>
+      <div class="legend">
+        <span><i class="sw e-asserted"></i>관계 인정</span>
+        <span><i class="sw e-abstain"></i>보류</span>
+        <span><i class="sw e-none"></i>관계 없음</span>
+        <span><i class="sw-dot n-drug"></i>약물</span>
+        <span><i class="sw-dot n-symptom"></i>증상</span>
+        <span><i class="sw-ring"></i>허브 개체</span>
+      </div>
+      <div class="note">허브는 <b>여러 질병에 두루 붙는 상대 개체</b>다. 후보 전수에서
+        연결 수 상위 ${Math.round((D.hub_top_ratio || .2) * 100)}%를 허브로 보며, 층화에 쓴 정의를 화면이 그대로 읽는다.
+        많이 걸릴수록 우연히 함께 등장했을 뿐일 가능성이 크다 (day3 p11). 지금 허브는
+        <b>${D.hubs.join(' · ')}</b>이다.</div>
+    </div>
+    <div class="section">
+      <div class="section-title">관계 목록</div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>상대 개체</th><th>판정</th><th>신뢰도</th><th>노트</th></tr></thead>
+        <tbody id="ex-body"></tbody></table></div>
+    </div>
+  </div>
+  <div class="section" id="ex-detail">
+    <div class="empty">그래프의 개체나 목록의 줄을 고르면 근거문장이 여기 나온다.</div>
+  </div>`;
+
+  let selected = null;
+  const draw = () => {
+    const center = $('ex-disease').value;
+    const sp = $('ex-split').value;
+    const list = D.cases.filter(c =>
+      c.disease === center && (sp === 'all' || c.split === sp));
+    if (!list.some(c => c.sample_id === selected)) selected = null;
+
+    $('ex-graph').innerHTML = relationGraph(center, list, selected);
+    $('ex-body').innerHTML = list.length ? list.map(c => {
+      const s = edgeStyle(c);
+      const label = c.abstained ? '보류'
+        : (c.relation === null ? '파싱 실패' : c.relation);
+      return `<tr class="clickable${c.sample_id === selected ? ' selected' : ''}"
+          data-id="${esc(c.sample_id)}">
+        <td>${esc(c.partner)}
+          <span class="badge b-neutral">${esc(c.partner_label)}</span>
+          ${D.hubs.includes(c.partner)
+            ? `<span class="badge b-warn">허브 ${D.hub_degree[c.partner]}질병</span>` : ''}</td>
+        <td><span class="badge ${s.cls === 'e-asserted' ? 'b-ok'
+          : (s.cls === 'e-abstain' ? 'b-warn' : 'b-neutral')}">${esc(label)}</span></td>
+        <td>${c.confidence === null ? '—' : c.confidence.toFixed(2)}</td>
+        <td>${c.notes.length}</td></tr>`;
+    }).join('') : '<tr><td colspan="4" class="empty">후보가 없다.</td></tr>';
+
+    const pick = id => { selected = id; draw(); renderCaseDetail(id, 'ex-detail'); };
+    $('ex-body').querySelectorAll('tr.clickable').forEach(tr =>
+      tr.onclick = () => pick(tr.dataset.id));
+    $('ex-graph').querySelectorAll('.gnode').forEach(g => {
+      g.onclick = () => pick(g.dataset.id);
+      g.onkeydown = e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(g.dataset.id); }
+      };
+    });
+  };
+  $('ex-disease').onchange = () => { selected = null; draw(); };
+  $('ex-split').onchange = draw;
+  draw();
 }
 
 // --- 요약 ---
@@ -357,7 +524,7 @@ function renderEvidence(c) {
   return items + ablation + reference;
 }
 
-function renderCaseDetail(id) {
+function renderCaseDetail(id, target = 'case-detail') {
   const c = D.cases.find(x => x.sample_id === id);
   const inj = c.injection_signals.length
     ? `<div class="banner banner-warn" style="margin:0 0 12px">
@@ -366,7 +533,7 @@ function renderCaseDetail(id) {
           ? '<b>모델이 지시를 따랐다</b>' : '모델은 지시를 따르지 않았다'}.
         탐지됐으므로 저항 여부와 무관하게 사람 확인 큐로 간다.</div>`
     : '';
-  $('case-detail').innerHTML = `
+  $(target).innerHTML = `
     <div class="section-title">${esc(c.disease)} → ${esc(c.partner)}
       <span class="badge b-neutral">${esc(c.partner_label)}</span>
       <span class="badge b-neutral">support ${c.support}</span></div>
@@ -560,6 +727,7 @@ function renderXai() {
 
 // --- 탭 ---
 const TABS = [
+  ['p-explore', '관계 탐색', renderExplore],
   ['p-summary', '요약', renderSummary],
   ['p-cases', '케이스·근거', renderCases],
   ['p-threshold', '두 임계값', renderThreshold],
