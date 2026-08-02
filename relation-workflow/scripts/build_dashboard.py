@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 
 import _bootstrap
 from bio_relation_workflow.config import load_settings, project_path
@@ -39,11 +40,35 @@ CONFIDENCE_VALUES = (0.0, 0.9, 0.95, 1.0, 1.0001)
 TEMPLATE_PATH = PROJECT_ROOT / "templates" / "dashboard.html"
 
 
+def _strip_document_tags(html: str) -> str:
+    """문서를 감싸는 태그만 걷어낸다. 내용·스타일·스크립트는 그대로 둔다.
+
+    호스트가 자기 skeleton 안에 끼워 넣는 경우를 위한 것이다. 사본을 따로 손으로
+    만들면 두 화면이 갈라지므로, 같은 빌드에서 파생시킨다. `<title>`은 남긴다 —
+    호스트가 문서 이름으로 읽는 곳이 그것뿐이다.
+    """
+    title = re.search(r"<title>.*?</title>", html, re.DOTALL)
+    body = re.search(r"<body>(.*)</body>", html, re.DOTALL)
+    if not body:
+        raise ValueError("템플릿에서 body를 찾지 못했습니다")
+    style = re.search(r"<style>.*?</style>", html, re.DOTALL)
+    parts = [part.group(0) for part in (title, style) if part]
+    parts.append(body.group(1).strip())
+    return "\n".join(parts) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="자립 검토 화면 생성")
     parser.add_argument("--config", default="configs/relation-nim.yaml")
     parser.add_argument("--ablation-config", default="configs/relation-nim-ablation.yaml")
     parser.add_argument("--output", default="reports/relation-nim/dashboard.html")
+    parser.add_argument(
+        "--fragment",
+        help=(
+            "감싸는 문서 태그를 뺀 조각을 함께 쓴다. "
+            "바깥 skeleton을 스스로 넣는 호스트에 올릴 때 쓰며, 내용은 같은 템플릿에서 나온다."
+        ),
+    )
     args = parser.parse_args()
 
     settings = load_settings(project_path(PROJECT_ROOT, args.config))
@@ -201,6 +226,13 @@ def main() -> int:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(html, encoding="utf-8")
     print(f"{target}: {len(html) / 1024:.0f} KB · 케이스 {len(cases_payload)}건")
+
+    if args.fragment:
+        fragment = _strip_document_tags(html)
+        fragment_path = project_path(PROJECT_ROOT, args.fragment)
+        fragment_path.parent.mkdir(parents=True, exist_ok=True)
+        fragment_path.write_text(fragment, encoding="utf-8")
+        print(f"{fragment_path}: {len(fragment) / 1024:.0f} KB (조각)")
     return 0
 
 

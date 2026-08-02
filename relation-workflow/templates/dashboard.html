@@ -5,73 +5,173 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>관계 판정 검토 화면</title>
 <style>
+  /* 색은 전부 토큰으로만 쓴다. 다크 테마는 토큰만 다시 정의하고 컴포넌트는 건드리지
+     않는다. 강조색은 흔한 기본 파랑 대신 임상 문서 검토의 잉크·용지 쪽 청록-슬레이트다.
+     의미색(정상·실패·주의·주입)은 강조색과 싸우지 않도록 채도를 낮췄다. */
+  :root {
+    --paper: #f1f3f4;
+    --surface: #ffffff;
+    --ink: #171c21;
+    --ink-soft: #5c676f;
+    --line: #e3e7ea;
+    --line-soft: #eef1f3;
+    --accent: #2b5c6b;
+    --accent-ink: #ffffff;
+    --accent-tint: #e6eef0;
+    --ok-bg: #dfeee6; --ok-fg: #16603f;
+    --bad-bg: #f6e2e4; --bad-fg: #8f2733;
+    --warn-bg: #f7eddb; --warn-fg: #7a4a10;
+    --inject-bg: #f2e4ee; --inject-fg: #6f3459;
+    --test-bg: #e6e8f2; --test-fg: #3b4076;
+    --neutral-bg: #eceef0; --neutral-fg: #414a51;
+    --shadow: 0 1px 2px rgba(23,28,33,.05), 0 4px 14px rgba(23,28,33,.05);
+    --sans: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    --mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0f1316; --surface: #171d21; --ink: #e2e8ea; --ink-soft: #93a1a8;
+      --line: #262f35; --line-soft: #1e262b;
+      --accent: #74b4c3; --accent-ink: #0f1316; --accent-tint: #1c2b30;
+      --ok-bg: #16302a; --ok-fg: #7fcfa8;
+      --bad-bg: #331d21; --bad-fg: #e79aa4;
+      --warn-bg: #33291a; --warn-fg: #e0b370;
+      --inject-bg: #2f2130; --inject-fg: #d9a3c8;
+      --test-bg: #1f2334; --test-fg: #a8b0e0;
+      --neutral-bg: #222a2f; --neutral-fg: #b3bfc6;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+  /* 뷰어의 테마 토글은 media query를 이겨야 한다 — 양방향 모두. */
+  :root[data-theme="light"] {
+    --paper: #f1f3f4; --surface: #ffffff; --ink: #171c21; --ink-soft: #5c676f;
+    --line: #e3e7ea; --line-soft: #eef1f3;
+    --accent: #2b5c6b; --accent-ink: #ffffff; --accent-tint: #e6eef0;
+    --ok-bg: #dfeee6; --ok-fg: #16603f;
+    --bad-bg: #f6e2e4; --bad-fg: #8f2733;
+    --warn-bg: #f7eddb; --warn-fg: #7a4a10;
+    --inject-bg: #f2e4ee; --inject-fg: #6f3459;
+    --test-bg: #e6e8f2; --test-fg: #3b4076;
+    --neutral-bg: #eceef0; --neutral-fg: #414a51;
+    --shadow: 0 1px 2px rgba(23,28,33,.05), 0 4px 14px rgba(23,28,33,.05);
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1316; --surface: #171d21; --ink: #e2e8ea; --ink-soft: #93a1a8;
+    --line: #262f35; --line-soft: #1e262b;
+    --accent: #74b4c3; --accent-ink: #0f1316; --accent-tint: #1c2b30;
+    --ok-bg: #16302a; --ok-fg: #7fcfa8;
+    --bad-bg: #331d21; --bad-fg: #e79aa4;
+    --warn-bg: #33291a; --warn-fg: #e0b370;
+    --inject-bg: #2f2130; --inject-fg: #d9a3c8;
+    --test-bg: #1f2334; --test-fg: #a8b0e0;
+    --neutral-bg: #222a2f; --neutral-fg: #b3bfc6;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-         line-height: 1.6; color: #1a1a2e; background: #f5f7fa; }
-  .container { max-width: 1180px; margin: 0 auto; padding: 20px; }
-  header { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px;
-           box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
-  .subtitle { color: #555; font-size: 0.9rem; }
-  .banner { border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 0.85rem; }
-  .banner-warn { background: #fff3cd; border: 1px solid #ffc107; color: #664d00; }
-  .banner-bad { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
-  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-  .tab { padding: 9px 16px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;
-         cursor: pointer; font-size: 0.9rem; font-weight: 500; }
-  .tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+  body { font-family: var(--sans); line-height: 1.6; color: var(--ink);
+         background: var(--paper); -webkit-font-smoothing: antialiased; }
+  .container { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px;
+               display: flex; flex-direction: column; gap: 16px; }
+
+  header { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+           padding: 24px; box-shadow: var(--shadow); display: flex;
+           flex-direction: column; gap: 14px; }
+  .head-top { display: flex; flex-direction: column; gap: 4px; }
+  h1 { font-size: 1.55rem; font-weight: 700; letter-spacing: -.02em;
+       text-wrap: balance; line-height: 1.25; }
+  .subtitle { color: var(--ink-soft); font-size: .88rem; }
+
+  .banner { border-radius: 8px; padding: 12px 14px; font-size: .85rem; }
+  .banner-warn { background: var(--warn-bg); color: var(--warn-fg);
+                 border-left: 3px solid var(--warn-fg); }
+  .banner-bad { background: var(--bad-bg); color: var(--bad-fg);
+                border-left: 3px solid var(--bad-fg); }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tab { padding: 9px 15px; border-radius: 7px; background: var(--surface);
+         border: 1px solid var(--line); color: var(--ink); cursor: pointer;
+         font-size: .88rem; font-weight: 500; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); }
+  .tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tab:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+
   .panel { display: none; }
-  .panel.active { display: block; }
-  .section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px;
-             box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .section-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 14px;
-                   display: flex; align-items: center; gap: 8px; }
-  .section-title::before { content: ''; width: 4px; height: 18px; background: #2563eb; border-radius: 2px; }
-  .note { font-size: 0.8rem; color: #667085; margin-top: 10px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
-  .stat { background: #f0f4f8; border-radius: 8px; padding: 11px 13px; }
-  .stat-label { font-size: 0.75rem; color: #667085; }
-  .stat-value { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eef0f3; }
-  th { background: #f8fafc; font-weight: 600; white-space: nowrap; }
+  .panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+  .section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+             padding: 20px; box-shadow: var(--shadow); }
+  .section + .section { margin-top: 0; }
+  .section-title { font-size: 1rem; font-weight: 650; letter-spacing: -.01em;
+                   margin-bottom: 14px; display: flex; align-items: center;
+                   gap: 8px; flex-wrap: wrap; }
+  .section-title::before { content: ''; width: 3px; height: 17px; flex: none;
+                           background: var(--accent); border-radius: 2px; }
+  .note { font-size: .8rem; color: var(--ink-soft); margin-top: 10px; line-height: 1.65; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; }
+  .stat { background: var(--accent-tint); border-radius: 8px; padding: 11px 13px; }
+  .stat-label { font-size: .72rem; color: var(--ink-soft); letter-spacing: .02em; }
+  .stat-value { font-size: 1.15rem; font-weight: 700; margin-top: 2px;
+                font-variant-numeric: tabular-nums; }
+
+  .table-wrapper { overflow-x: auto; max-height: 460px; overflow-y: auto;
+                   border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: .83rem;
+          font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line-soft); }
+  th { background: var(--paper); font-weight: 600; white-space: nowrap;
+       position: sticky; top: 0; z-index: 1; }
   tbody tr.clickable { cursor: pointer; }
-  tbody tr.clickable:hover { background: #f0f7ff; }
-  tbody tr.selected { background: #e8f0fe; }
-  .table-wrapper { overflow-x: auto; max-height: 460px; overflow-y: auto; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px;
-           font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
-  .b-live { background: #dcfce7; color: #166534; }
-  .b-test { background: #e0e7ff; color: #3730a3; }
-  .b-ok { background: #dcfce7; color: #166534; }
-  .b-bad { background: #fee2e2; color: #991b1b; }
-  .b-warn { background: #fef3c7; color: #92400e; }
-  .b-neutral { background: #f3f4f6; color: #374151; }
-  .b-inject { background: #fce7f3; color: #9d174d; }
-  select, input[type=range] { font-size: 0.9rem; }
-  select { padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
-  .controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
-  .control { min-width: 220px; }
-  label { display: block; font-size: 0.82rem; font-weight: 500; color: #444; margin-bottom: 5px; }
-  .evidence { background: #fafbfc; border: 1px solid #eef0f3; border-radius: 8px;
+  tbody tr.clickable:hover { background: var(--accent-tint); }
+  tbody tr.selected { background: var(--accent-tint); box-shadow: inset 3px 0 0 var(--accent); }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
+           font-size: .7rem; font-weight: 600; white-space: nowrap; }
+  .b-live { background: var(--ok-bg); color: var(--ok-fg); }
+  .b-test { background: var(--test-bg); color: var(--test-fg); }
+  .b-ok { background: var(--ok-bg); color: var(--ok-fg); }
+  .b-bad { background: var(--bad-bg); color: var(--bad-fg); }
+  .b-warn { background: var(--warn-bg); color: var(--warn-fg); }
+  .b-neutral { background: var(--neutral-bg); color: var(--neutral-fg); }
+  .b-inject { background: var(--inject-bg); color: var(--inject-fg); }
+
+  .controls { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;
+              margin-bottom: 14px; }
+  .control { min-width: 220px; flex: 1; }
+  label { display: block; font-size: .78rem; font-weight: 600; color: var(--ink-soft);
+          letter-spacing: .02em; margin-bottom: 5px; }
+  select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px;
+           background: var(--surface); color: var(--ink); font-size: .88rem;
+           font-family: inherit; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  .evidence { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
               padding: 14px; margin-top: 10px; }
-  .quote { border-left: 3px solid #2563eb; padding: 6px 0 6px 11px; margin: 8px 0;
-           font-size: 0.87rem; color: #334155; }
-  .check { font-size: 0.84rem; margin-top: 5px; }
-  .check-ok { color: #166534; }
-  .check-bad { color: #991b1b; }
-  .check-warn { color: #92400e; }
-  .check-none { color: #667085; }
-  .empty { color: #667085; font-size: 0.87rem; padding: 14px 0; }
-  .mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.8rem; }
+  .quote { border-left: 3px solid var(--accent); padding: 6px 0 6px 12px; margin: 8px 0;
+           font-size: .87rem; color: var(--ink); }
+  .check { font-size: .83rem; margin-top: 5px; }
+  .check-ok { color: var(--ok-fg); }
+  .check-bad { color: var(--bad-fg); }
+  .check-warn { color: var(--warn-fg); }
+  .check-none { color: var(--ink-soft); }
+  .empty { color: var(--ink-soft); font-size: .87rem; padding: 14px 0; }
+  .mono { font-family: var(--mono); font-size: .8rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-  <h1>관계 판정 검토 화면</h1>
-  <div class="subtitle">질병-약물-증상 관계 탐색 · 검증 가능한 workflow</div>
-  <div class="grid" style="margin-top:14px">
+  <div class="head-top">
+    <h1>관계 판정 검토 화면</h1>
+    <div class="subtitle">질병-약물-증상 관계 탐색 · 검증 가능한 workflow</div>
+  </div>
+  <div class="grid">
     <div class="stat"><div class="stat-label">모델</div>
       <div class="stat-value mono" id="meta-model" style="font-size:.85rem"></div></div>
     <div class="stat"><div class="stat-label">근거 종류</div>
@@ -260,7 +360,7 @@ function renderEvidence(c) {
 function renderCaseDetail(id) {
   const c = D.cases.find(x => x.sample_id === id);
   const inj = c.injection_signals.length
-    ? `<div class="banner banner-warn" style="margin-top:0">
+    ? `<div class="banner banner-warn" style="margin:0 0 12px">
         주입 신호 ${c.injection_signals.map(s => esc(s)).join(', ')} —
         ${c.injection_complied.length
           ? '<b>모델이 지시를 따랐다</b>' : '모델은 지시를 따르지 않았다'}.
