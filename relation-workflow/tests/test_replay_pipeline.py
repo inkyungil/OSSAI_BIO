@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -14,7 +15,9 @@ from bio_relation_workflow.evaluation import build_summary, score_observations
 from bio_relation_workflow.providers import RecordedProvider
 from bio_relation_workflow.workflow import run_cases
 
-PROMPT = "prompts/relation-verdict.md"
+# 상위 폴더 이름에 기대지 않는다. 프로젝트를 옮겨도 따라온다.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROMPT = PROJECT_ROOT / "prompts" / "relation-verdict.md"
 
 
 def _stub_response(case, note_texts, *, corrupt=False):
@@ -69,14 +72,13 @@ def stub_fixture(tmp_path, cases, corpus):
     return path, selected, note_texts
 
 
-def test_replay_runs_and_scores(stub_fixture, corpus, request):
+def test_replay_runs_and_scores(stub_fixture, corpus):
     path, selected, note_texts = stub_fixture
-    project_root = request.config.rootpath / "bio" / "relation-workflow"
 
     observations = run_cases(
         cases=selected,
         notes=corpus.notes,
-        prompt_path=project_root / PROMPT,
+        prompt_path=PROMPT,
         provider=RecordedProvider(path),
     )
     assert len(observations) == len(selected)
@@ -91,13 +93,12 @@ def test_replay_runs_and_scores(stub_fixture, corpus, request):
     assert summary["generalization"].startswith("SINGLE")
 
 
-def test_replay_flags_fabricated_quote(stub_fixture, corpus, request):
+def test_replay_flags_fabricated_quote(stub_fixture, corpus):
     path, selected, note_texts = stub_fixture
-    project_root = request.config.rootpath / "bio" / "relation-workflow"
     observations = run_cases(
         cases=selected,
         notes=corpus.notes,
-        prompt_path=project_root / PROMPT,
+        prompt_path=PROMPT,
         provider=RecordedProvider(path),
     )
     results = score_observations(selected, observations, note_texts=note_texts)
@@ -109,8 +110,7 @@ def test_replay_flags_fabricated_quote(stub_fixture, corpus, request):
         assert "SOURCE" in first.hallucinations
 
 
-def test_missing_response_becomes_model_error(tmp_path, cases, corpus, request):
-    project_root = request.config.rootpath / "bio" / "relation-workflow"
+def test_missing_response_becomes_model_error(tmp_path, cases, corpus):
     path = tmp_path / "empty.jsonl"
     path.write_text(
         json.dumps({"sample_id": "없는-건", "response": {}}, ensure_ascii=False) + "\n",
@@ -119,7 +119,7 @@ def test_missing_response_becomes_model_error(tmp_path, cases, corpus, request):
     observations = run_cases(
         cases=cases[:1],
         notes=corpus.notes,
-        prompt_path=project_root / PROMPT,
+        prompt_path=PROMPT,
         provider=RecordedProvider(path),
     )
     assert observations[0].model_error

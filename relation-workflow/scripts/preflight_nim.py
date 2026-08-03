@@ -63,14 +63,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    load_project_env(PROJECT_ROOT)
+    env_path = load_project_env(PROJECT_ROOT)
     settings = load_settings(project_path(PROJECT_ROOT, args.config))
     if args.model:
         name = args.model
         settings.provider.model = (
             name if name.startswith("nvidia_nim/") else f"nvidia_nim/{name}"
         )
-    api_key = require_api_key(settings.provider.api_key_env)
+    api_key = require_api_key(settings.provider.api_key_env, env_path=env_path)
     available = fetch_catalog(api_key)
 
     configured = settings.provider.model.removeprefix("nvidia_nim/")

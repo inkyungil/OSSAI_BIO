@@ -1,0 +1,15 @@
+# 비밀값. relation-workflow는 여기서 위로 올라가며 .env를 찾는다.
+.env
+
+# 이 프로젝트 전용 가상환경
+.venv/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.deepeval/
+
+# 강의 자료 원본 72MB (PDF 8종·이미지 수백 장·노트북).
+# 저장소에 넣고 싶으면 이 줄을 지운다.
+day6/

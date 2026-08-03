@@ -23,6 +23,7 @@ from bio_relation_workflow.config import (
     load_project_env,
     load_settings,
     project_path,
+    require_api_key,
 )
 from bio_relation_workflow.data import load_cases
 from bio_relation_workflow.evaluation.relation_scoring import parse_output
@@ -89,7 +90,7 @@ def main() -> int:
         parser.error("실제 API 호출에는 --live가 필요합니다")
 
     splits = args.split or ["development", "validation"]
-    load_project_env(PROJECT_ROOT)
+    env_path = load_project_env(PROJECT_ROOT)
     settings = load_settings(project_path(PROJECT_ROOT, args.config))
     source = load_settings(project_path(PROJECT_ROOT, args.source_config))
     if settings.provider.model != source.provider.model:
@@ -99,6 +100,7 @@ def main() -> int:
         )
     if settings.paths.prompt != source.paths.prompt:
         raise ValueError("절제 재질의는 본 판정과 같은 프롬프트를 써야 합니다")
+    require_api_key(settings.provider.api_key_env, env_path=env_path)
 
     results = _load_results(
         project_path(PROJECT_ROOT, source.paths.output), splits

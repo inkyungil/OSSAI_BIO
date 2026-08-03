@@ -1,6 +1,6 @@
 """프로토타입 HTML의 사전계산 JSON에서 임상 노트 코퍼스를 복원한다.
 
-`bio/day6/relation-explorer.html`은 day3 관계추출 실습 결과를 `const DATA`로 품고 있다.
+`day6/relation-explorer.html`은 day3 관계추출 실습 결과를 `const DATA`로 품고 있다.
 노트 전문은 각 엣지의 evidence에 흩어져 있으므로 note_id 기준으로 다시 모은다.
 
 개체 탐지는 day2의 규칙 NER 규율을 따라 최장 일치를 쓴다. 짧은 개체가 긴 개체를 삼켜

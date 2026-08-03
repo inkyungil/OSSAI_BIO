@@ -78,3 +78,55 @@ def test_unknown_key_is_rejected(tmp_path):
     path.write_text(yaml.safe_dump(payload), encoding="utf-8")
     with pytest.raises(ValidationError):
         load_settings(path)
+
+
+# --- .env 탐색 ---
+#
+# 옮기기 전에는 `project_root/.env` 하나만 보고 없으면 조용히 넘어갔다. 그런데도
+# live 실행이 됐던 것은 의존성 하나가 인자 없는 load_dotenv()를 불러 현재 폴더에서
+# 위로 올라가다 **다른 프로젝트의** .env를 우연히 집었기 때문이다. 폴더를 옮기는
+# 순간 깨지는 우연이라, 어디서 읽었는지 돌려주고 상위도 보도록 바꿨다.
+
+
+def test_env_is_found_in_the_project_folder(tmp_path):
+    from bio_relation_workflow.config import find_project_env
+
+    (tmp_path / ".env").write_text("K=v\n", encoding="utf-8")
+    assert find_project_env(tmp_path) == tmp_path / ".env"
+
+
+def test_env_is_found_in_the_repository_root_above(tmp_path):
+    """저장소 루트에 .env 하나만 두고 하위 프로젝트가 공유하는 배치."""
+    from bio_relation_workflow.config import find_project_env
+
+    (tmp_path / ".env").write_text("K=v\n", encoding="utf-8")
+    nested = tmp_path / "relation-workflow"
+    nested.mkdir()
+    assert find_project_env(nested) == tmp_path / ".env"
+
+
+def test_missing_env_is_reported_not_swallowed(tmp_path):
+    from bio_relation_workflow.config import load_project_env
+
+    deep = tmp_path / "a" / "b" / "c"
+    deep.mkdir(parents=True)
+    assert load_project_env(deep) is None
+
+
+def test_search_does_not_climb_forever(tmp_path):
+    """무한정 올라가면 관계없는 프로젝트의 비밀값을 집는다."""
+    from bio_relation_workflow.config import find_project_env
+
+    (tmp_path / ".env").write_text("K=v\n", encoding="utf-8")
+    too_deep = tmp_path / "a" / "b" / "c"
+    too_deep.mkdir(parents=True)
+    assert find_project_env(too_deep) is None
+
+
+def test_missing_key_error_names_the_env_file(tmp_path):
+    from bio_relation_workflow.config import require_api_key
+
+    with pytest.raises(ValueError, match="찾지 못했다"):
+        require_api_key("ABSENT_KEY_FOR_TEST", env_path=None)
+    with pytest.raises(ValueError, match="에서 읽었다"):
+        require_api_key("ABSENT_KEY_FOR_TEST", env_path=tmp_path / ".env")

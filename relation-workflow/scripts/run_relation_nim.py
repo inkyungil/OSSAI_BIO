@@ -18,6 +18,7 @@ from bio_relation_workflow.config import (
     load_project_env,
     load_settings,
     project_path,
+    require_api_key,
 )
 from bio_relation_workflow.data import load_cases
 from bio_relation_workflow.evaluation import build_summary, score_observations
@@ -61,12 +62,15 @@ def main() -> int:
     if args.limit is not None and args.limit <= 0:
         parser.error("--limit은 양수여야 합니다")
 
-    load_project_env(PROJECT_ROOT)
+    env_path = load_project_env(PROJECT_ROOT)
     settings = load_settings(project_path(PROJECT_ROOT, args.config))
     if settings.provider.kind != "litellm":
         raise ValueError("live 설정의 provider.kind는 litellm이어야 합니다")
     if not settings.provider.api_key_env:
         raise ValueError("live 설정에 api_key_env가 필요합니다")
+    # 케이스를 다 읽고 한참 뒤 provider 안에서 터지지 않도록 여기서 먼저 확인한다.
+    # 어느 .env를 읽었는지도 함께 알려준다 — 못 찾았으면 그 사실이 원인이다.
+    require_api_key(settings.provider.api_key_env, env_path=env_path)
 
     all_cases = load_cases(project_path(PROJECT_ROOT, settings.paths.cases))
     cases = all_cases

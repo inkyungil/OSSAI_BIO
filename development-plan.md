@@ -74,9 +74,21 @@ validation 41건 중 실패 8건이 **development가 한 번도 담지 않은 �
 지정돼 있다. #20 실행 후 `register_sealed_prediction.py check`로 대조한다.
 프롬프트는 손대지 않는다.
 
+### 위치와 실행 환경
+
+2026-08-03에 `OSSAI-26-1/bio/`에서 **`C:\app\bio` 독립 저장소로 분리**했다. 이력은
+`git subtree split`으로 그대로 가져왔다.
+
+- 파이썬은 이 저장소의 `.venv` (`requirements.txt`로 재현). OSSAI의 venv를 쓰지 않는다.
+- API key는 저장소 루트 `.env`. `load_project_env()`가 프로젝트 폴더에서 위로 두
+  단계까지 찾고 **어느 파일을 읽었는지 돌려준다.** 분리 전에는 이 함수가 없는 경로를
+  보고 조용히 넘어갔는데, 의존성 하나가 인자 없는 `load_dotenv()`로 상위 폴더의
+  다른 프로젝트 `.env`를 우연히 집어서 동작하고 있었다. 옮기면서 드러난 결함이다.
+- `day6/`는 강의 자료 72MB라 `.gitignore`에 있다. 저장소에 넣으려면 그 줄을 지운다.
+
 ### 재시작할 때
 
-세션을 새로 열면 이 문서와 `bio/relation-workflow/docs/tuning-log.md`를 먼저 읽는다.
+세션을 새로 열면 이 문서와 `relation-workflow/docs/tuning-log.md`를 먼저 읽는다.
 생성물(`local-data/`, `reports/`)은 디스크에 남아 있으므로 데이터 준비를 다시 돌릴
 필요가 없다. 단, `prepare_relation_notes.py`를 다시 돌리면 주입 노트가 날아간다.
 
@@ -89,14 +101,14 @@ validation 41건 중 실패 8건이 **development가 한 번도 담지 않은 �
 ## 0. 원칙
 
 **기존 `src/verifiable_ai_workflow/`는 수정하지 않는다.** 읽기 전용 참조로만 쓰고, 필요한 코드는
-출처 주석과 함께 복사한다. bio는 `bio/relation-workflow/` 자립 프로젝트로 만든다.
+출처 주석과 함께 복사한다. bio는 `relation-workflow/` 자립 프로젝트로 만든다.
 
 의존성은 루트 `.venv`를 그대로 재사용한다. litellm·pydantic·deepeval·pyyaml·python-dotenv·
 pytest·ruff가 이미 설치돼 있고, 텍스트 도메인이라 pypdfium2는 필요 없다. 루트 `pyproject.toml`도
 건드리지 않고 scripts에서 `sys.path`를 부트스트랩한다.
 
 ```
-bio/relation-workflow/
+relation-workflow/
 ├── src/bio_relation_workflow/
 │   ├── config/          settings(NoteSettings), secrets      ← 복사 + 수정
 │   ├── schemas/         relation.py (RelationVerdict 등)      ← 신규
@@ -113,15 +125,15 @@ bio/relation-workflow/
 └── tests/
 ```
 
-산출물은 프로젝트 안에 둔다 — 노트 코퍼스·후보는 `bio/relation-workflow/local-data/`,
-실행 결과는 `bio/relation-workflow/reports/`. 둘 다 `bio/relation-workflow/.gitignore`로
+산출물은 프로젝트 안에 둔다 — 노트 코퍼스·후보는 `relation-workflow/local-data/`,
+실행 결과는 `relation-workflow/reports/`. 둘 다 `relation-workflow/.gitignore`로
 제외하므로 루트 `.gitignore`도 건드리지 않는다.
 
 ---
 
 ## 1. 확정된 데이터 사실
 
-`bio/day6/relation-explorer.html`의 `const DATA`를 파싱해 확인했다.
+`day6/relation-explorer.html`의 `const DATA`를 파싱해 확인했다.
 
 | 항목 | 값 |
 | --- | ---: |
@@ -192,7 +204,7 @@ bio/relation-workflow/
 
 | # | 태스크 | 완료 기준 |
 | ---: | --- | --- |
-| 1 | bio/relation-workflow 독립 패키지 뼈대 | `check_environment.py` import 성공 |
+| 1 | relation-workflow 독립 패키지 뼈대 | `check_environment.py` import 성공 |
 | 2 | 도메인 무관 코드 복사 (원본 수정 없음) | 복사한 text_metrics가 원본 테스트와 같은 값 |
 
 ### Phase 1 — 데이터 (하루, 라벨링 포함) · **임계 경로**

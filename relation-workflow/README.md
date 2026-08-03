@@ -6,20 +6,22 @@
 설계 근거는 [../verifiable-workflow-plan.md](../verifiable-workflow-plan.md),
 개발 순서는 [../development-plan.md](../development-plan.md)에 있다.
 
-## 저장소 안에서의 위치
+## 출신과 독립
 
-저장소 루트의 `src/verifiable_ai_workflow/`(PDF 질의응답)와 **같은 규율을 따르되 별도
-패키지**다. 원본은 수정하지 않는다. 도메인 무관 코드는 출처 주석과 함께 복사한다.
+원래 `OSSAI-26-1` 저장소 안 `bio/`에 있었고, 그 저장소의 `src/verifiable_ai_workflow/`
+(PDF 질의응답)와 **같은 규율을 따르되 별도 패키지**로 만들었다. 도메인 무관 코드는
+출처 주석과 함께 복사했고 원본은 수정하지 않았다.
 
-의존성은 루트 `.venv`를 그대로 재사용한다. 텍스트 도메인이라 pypdfium2·pillow는 필요 없다.
-루트 `pyproject.toml`도 건드리지 않고 `scripts/_bootstrap.py`가 `src/`를 import 경로에 올린다.
+지금은 `C:\app\bio`로 떨어져 나와 스스로 돌아간다. 의존성은 이 폴더의 `.venv`이고,
+API key는 저장소 루트 `.env`에서 읽는다. `scripts/_bootstrap.py`가 `src/`를 import
+경로에 올리므로 패키지 설치는 필요 없다. 텍스트 도메인이라 pypdfium2·pillow도 없다.
 
 ## 환경 확인
 
-저장소 루트에서 실행한다.
+`C:\app\bio`(저장소 루트)에서 실행한다.
 
 ```bash
-.venv/Scripts/python.exe bio/relation-workflow/scripts/check_environment.py
+.venv/Scripts/python.exe relation-workflow/scripts/check_environment.py
 ```
 
 ## 데이터 준비 순서
@@ -28,7 +30,7 @@
 코퍼스가 초기화된다.
 
 ```bash
-P=bio/relation-workflow/scripts
+P=relation-workflow/scripts
 .venv/Scripts/python.exe $P/prepare_relation_notes.py       # ① 노트 108건 복원
 .venv/Scripts/python.exe $P/prepare_relation_candidates.py  # ② 후보 123쌍, 층화 100건
 .venv/Scripts/python.exe $P/make_labeling_template.py       # ③ 라벨링 편집 틀
@@ -47,7 +49,7 @@ split 규율을 지키는 순서다. 프롬프트는 development에서만 고치
 고르며, sealed_test는 마지막에 한 번만 본다 (`day5 p37-38`).
 
 ```bash
-P=bio/relation-workflow/scripts
+P=relation-workflow/scripts
 .venv/Scripts/python.exe $P/run_relation_nim.py --live --split development
 .venv/Scripts/python.exe $P/run_relation_nim.py --live --split validation --resume
 .venv/Scripts/python.exe $P/select_operating_point.py          # 운영점 선택 (validation 전용)
@@ -111,6 +113,6 @@ tests/
 
 ## 데이터 출처
 
-`bio/day6/relation-explorer.html`(day6 실습의 관계탐색 프로토타입)의 사전계산 JSON에서 노트
+`day6/relation-explorer.html`(day6 실습의 관계탐색 프로토타입)의 사전계산 JSON에서 노트
 108건과 개체 30종을 추출한다. day3 관계추출 실습의 산출물이며 **교육용 합성 데이터**다.
 실제 환자 기록이 아니고 임상 성능 근거도 아니다.

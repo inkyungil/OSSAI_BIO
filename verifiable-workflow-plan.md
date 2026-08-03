@@ -2,9 +2,9 @@
 
 작성일 2026-08-02
 
-day6 실습의 관계탐색 프로토타입(`bio/day6/relation-explorer.html`)을 OSSAI-26-1 저장소의
+day6 실습의 관계탐색 프로토타입(`day6/relation-explorer.html`)을 OSSAI-26-1 저장소의
 **검증 가능한 AI Workflow 설계·평가** 구조로 재설계하고, 텍스트 축 XAI를 추가하는 계획서다.
-근거는 `bio/day6/doc/`의 KIDICO 바이오헬스 AI 7차시 슬라이드와 이 저장소의 Week 1 구현이다.
+근거는 `day6/doc/`의 KIDICO 바이오헬스 AI 7차시 슬라이드와 이 저장소의 Week 1 구현이다.
 
 ---
 
@@ -337,7 +337,7 @@ Week 1 프롬프트는 페이지 이미지를 넣는 구조인데(`inputs.py`) �
 
 ## 부록 — doc PDF 읽는 법
 
-`bio/day6/doc/*.pdf`는 한글 파일명이라 Read 도구가 열지 못한다. ASCII 이름으로 복사한 뒤
+`day6/doc/*.pdf`는 한글 파일명이라 Read 도구가 열지 못한다. ASCII 이름으로 복사한 뒤
 텍스트를 추출해야 한다.
 
 ```bash

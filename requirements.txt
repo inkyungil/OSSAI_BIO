@@ -1,0 +1,14 @@
+# relation-workflow 실행에 필요한 것. OSSAI-26-1 저장소의 .venv에서 실제로 쓰던
+# 버전을 그대로 고정했다 — 옮기면서 동작이 달라지지 않게 하려는 것이다.
+#
+#   uv venv
+#   uv pip install -r requirements.txt
+#
+# 텍스트 도메인이라 pypdfium2·pillow는 필요 없다.
+litellm==1.93.0
+pydantic==2.13.4
+deepeval==4.1.2
+PyYAML==6.0.3
+python-dotenv==1.2.2
+pytest==9.1.1
+ruff==0.15.22
