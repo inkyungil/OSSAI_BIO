@@ -251,6 +251,27 @@ development + validation 38건에서 근거를 지우고 판정이 바뀌는지 
 | [docs/tuning-log.md](relation-workflow/docs/tuning-log.md) | 프롬프트 조정 기록 — 여기 없는 조정은 없어야 한다 |
 | [docs/design-worksheet.md](relation-workflow/docs/design-worksheet.md) | 설계 워크시트 ①~⑦ + 게이트 3 |
 
+## 사용한 오픈소스
+
+버전과 라이선스는 이 저장소 `.venv`에 설치된 배포 메타데이터에서 그대로 옮겼다.
+
+| 구분 | 오픈소스 | 버전 | 라이선스 | 이 프로젝트에서의 쓰임 |
+| --- | --- | --- | --- | --- |
+| AI 모델 | gpt-oss-20b | — | 개방 가중치 | 관계 판정 LLM. NVIDIA NIM 엔드포인트로 서빙 |
+| AI 연동 | [LiteLLM](https://github.com/BerriAI/litellm) | 1.93.0 | MIT | 모델 호출 추상화, 재시도·요청수·비용 상한 |
+| AI 평가 | [DeepEval](https://github.com/confident-ai/deepeval) | 4.1.2 | Apache-2.0 | 평가 지표 실행과 test_run 산출물 기록 |
+| 데이터 계약 | [Pydantic](https://github.com/pydantic/pydantic) | 2.13.4 | MIT | 판정 출력 스키마 계약 정의·검증 |
+| 설정·라벨 | [PyYAML](https://github.com/yaml/pyyaml) | 6.0.3 | MIT | 실행 설정과 사람이 편집하는 정답 라벨 로딩 |
+| 비밀값 | [python-dotenv](https://github.com/theskumar/python-dotenv) | 1.2.2 | BSD-3-Clause | API 키를 코드가 아닌 `.env`에서 주입 |
+| 테스트 | [pytest](https://github.com/pytest-dev/pytest) | 9.1.1 | MIT | replay 기반 회귀 검증 191건 |
+| 정적 분석 | [Ruff](https://github.com/astral-sh/ruff) | 0.15.22 | MIT | 린트·임포트 정렬 (E/F/I/UP/B) |
+| 런타임 | [Python](https://github.com/python/cpython) | 3.12.11 | PSF | 구현 언어 |
+| 패키지 관리 | [uv](https://github.com/astral-sh/uv) | — | Apache-2.0 / MIT | 가상환경 생성과 의존성 버전 고정 |
+
+**NVIDIA NIM은 오픈소스가 아니다.** 모델 가중치는 공개돼 있지만 호출한 엔드포인트
+(`integrate.api.nvidia.com`)는 상용 호스팅 서비스다. 모델 라이선스의 정확한 조건은
+배포처의 모델 카드를 확인할 것.
+
 ## 구조
 
 ```text
